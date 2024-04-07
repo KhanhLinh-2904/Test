@@ -7,7 +7,8 @@ import warnings
 import torch
 from torchvision import transforms
 from PIL import Image
-
+import sys
+sys.path.append('miniFAS')
 from tracker.centroid_tracker import CentroidTracker
 
 from src.anti_spoof_predict import AntiSpoofPredict
@@ -18,8 +19,8 @@ warnings.filterwarnings('ignore')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-model_1 = 'resources/anti_spoof_models/2.7_80x80_MiniFASNetV2.pth'
-model_2 = 'resources/anti_spoof_models/4_0_0_80x80_MiniFASNetV1SE.pth'
+model_1 = 'miniFAS/resources/anti_spoof_models/2.7_80x80_MiniFASNetV2.pth'
+model_2 = 'miniFAS/resources/anti_spoof_models/4_0_0_80x80_MiniFASNetV1SE.pth'
 
 model_test = AntiSpoofPredict(0)
 
@@ -100,7 +101,7 @@ def adjust_bounding_box(box):
     return x, y, w, h
 
 def load_model():
-    scripted_model_file = 'mobilefacenet/mobilefacenet_scripted.pt'
+    scripted_model_file = 'miniFAS/mobilefacenet/mobilefacenet_scripted.pt'
     model = torch.jit.load(scripted_model_file)
     model = model.to(device)
     model.eval()

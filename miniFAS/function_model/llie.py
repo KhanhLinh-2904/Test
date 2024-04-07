@@ -11,8 +11,8 @@ import cv2
 from matplotlib import pyplot as plt
 from torchvision import  utils
 import Zero_DCE_plus_plus.model as model
-model_path = 'Zero_DCE_plus_plus/Epoch99.pth'
-model_save = 'model_onnx/ZeroDCE++1.onnx'
+model_path = 'miniFAS/Zero_DCE_plus_plus/Epoch99.pth'
+model_save = 'miniFAS/model_onnx/ZeroDCE++1.onnx'
 def to_numpy(tensor):
     return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
 def is_low_light(image, threshold=50):
@@ -23,7 +23,7 @@ def is_low_light(image, threshold=50):
     else:
         return False
 
-def lowlight_enhancement_onnx(data_lowlight, image_name, save_model=False, save_path="./datasets/Test/"):
+def lowlight_enhancement_onnx(data_lowlight, image_name ="none.jpg", save_model=False, save_path="./datasets/Test/"):
     scale_factor = 12
     data_lowlight = (np.asarray(data_lowlight)/255.0)
     data_lowlight = torch.from_numpy(data_lowlight).float()
@@ -32,11 +32,10 @@ def lowlight_enhancement_onnx(data_lowlight, image_name, save_model=False, save_
     data_lowlight = data_lowlight[0:h,0:w,:]
     data_lowlight = data_lowlight.permute(2,0,1)
     data_lowlight = data_lowlight.unsqueeze(0)
-    
+    print("data_lowlight.shape: ",data_lowlight.shape)
     torch_model = model.enhance_net_nopool(scale_factor)
     torch_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
     torch_model.eval()
-
 
     onnx_program = torch.onnx.dynamo_export(torch_model, data_lowlight)
     onnx_input = onnx_program.adapt_torch_inputs_to_onnx(data_lowlight)
@@ -44,7 +43,7 @@ def lowlight_enhancement_onnx(data_lowlight, image_name, save_model=False, save_
     onnx_program.save(model_save)
 
     ort_session = onnxruntime.InferenceSession(model_save, providers=['CPUExecutionProvider'])
-    
+    # ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(data_lowlight)}
     onnxruntime_input = {k.name: to_numpy(v) for k, v in zip(ort_session.get_inputs(), onnx_input)}
     onnxruntime_outputs = ort_session.run(None, onnxruntime_input)
    
@@ -63,7 +62,7 @@ def lowlight_enhancement_onnx(data_lowlight, image_name, save_model=False, save_
         plt.imsave(result_path, rgb_image)
     return rgb_image
 
-def lowlight_enhancement_pytorch(data_lowlight,image_name, save_model=False, save_path='./datasets/Test/'):
+def lowlight_enhancement_pytorch(data_lowlight,image_name="none.jpg", save_model=False, save_path='./datasets/Test/'):
     scale_factor = 12
     data_lowlight = (np.asarray(data_lowlight)/255.0)
     data_lowlight = torch.from_numpy(data_lowlight).float()
@@ -85,3 +84,4 @@ def lowlight_enhancement_pytorch(data_lowlight,image_name, save_model=False, sav
         result_path = os.path.join(save_path, image_name)
         plt.imsave(result_path, enhanced_image)
     return enhanced_image
+

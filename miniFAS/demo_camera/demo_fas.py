@@ -3,8 +3,10 @@ import time
 import numpy as np
 import multiprocessing
 import matplotlib.pyplot as plt
-from miniFAS.function_model.fas import miniFAS_onnx
-from miniFAS.function_model.llie import is_low_light, lowlight_enhancement_onnx
+import sys
+sys.path.append('miniFAS')
+from function_model.fas import miniFAS_onnx
+from function_model.llie import is_low_light, lowlight_enhancement_onnx
 from utils.custom_utils import detect_face, predict_fas, tracking
 
 threshold = 100

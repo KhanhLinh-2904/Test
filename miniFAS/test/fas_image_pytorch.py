@@ -2,13 +2,24 @@ import os
 import cv2
 import warnings
 from tqdm import tqdm
-from miniFAS.function_model.fas import miniFAS_pytorch
-from miniFAS.function_model.llie import is_low_light, lowlight_enhancement_pytorch
+
+import sys
+sys.path.append('miniFAS')
+
+from function_model.fas import miniFAS_pytorch
+
+
+from function_model.llie import is_low_light, lowlight_enhancement_pytorch
 from src.anti_spoof_predict import AntiSpoofPredict
 warnings.filterwarnings('ignore')
 from matplotlib import pyplot as plt
+
+
+
+
+
 model_test = AntiSpoofPredict(0)
-dataset ="datasets/Test/data_real_lowlight"
+dataset = 'miniFAS/datasets/Test/data_real_lowlight'
    
 if __name__ == "__main__":
     tp = 0
@@ -19,13 +30,14 @@ if __name__ == "__main__":
     label = 'real'
     cnt_lowlight = 0
     images = os.listdir(dataset)
+    print("len folder: ", len(images))
     for image in tqdm(images):
         img_path = os.path.join(dataset, image)
         img = cv2.imread(img_path)
         # print("img shape: ",img.shape)
         threshold = 100
         if is_low_light(img,threshold):
-            img = lowlight_enhancement_pytorch(img)
+            img = lowlight_enhancement_pytorch(img, image)
             cnt_lowlight += 1
         prediction = miniFAS_pytorch(img)
         if prediction == "none":

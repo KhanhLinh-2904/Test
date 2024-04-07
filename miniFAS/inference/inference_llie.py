@@ -11,8 +11,9 @@ from PIL import Image
 import cv2
 from matplotlib import pyplot as plt
 from torchvision import  utils
-
-from miniFAS.function_model.llie import is_low_light, lowlight_enhancement_onnx
+import sys
+sys.path.append('miniFAS')
+from function_model.llie import is_low_light, lowlight_enhancement_onnx
 filePath = 'datasets/Test/dark_face_dataset/fake'	
 savePath = ''
 saveModel = True

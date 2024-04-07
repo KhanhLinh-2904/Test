@@ -3,12 +3,14 @@ import cv2
 import warnings
 from tqdm import tqdm
 import torch
-from miniFAS.function_model.llie import is_low_light, lowlight_enhancement_onnx
-from miniFAS.function_model.miniFAS import miniFAS_onnx
+import sys
+sys.path.append('miniFAS')
+from function_model.llie import is_low_light, lowlight_enhancement_onnx
+from function_model.fas import miniFAS_onnx
 warnings.filterwarnings('ignore')
 # Initialize GPU if available
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-dataset ="datasets/Test/low-light-video"
+dataset ="miniFAS/datasets/Test/low-light-video"
 
 if __name__ == "__main__":
     tp = 0
@@ -19,6 +21,7 @@ if __name__ == "__main__":
     threshold = 100
     non_face = 0
     videos = os.listdir(dataset)
+    print("len folder: ", len(videos))
     for video in tqdm(videos):
         video_path = os.path.join(dataset, video)
         print("video_path: ",video_path)

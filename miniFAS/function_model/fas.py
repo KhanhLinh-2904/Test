@@ -1,6 +1,11 @@
 import numpy as np
 import warnings
 import torch
+import sys
+import os
+
+sys.path.append('miniFAS')
+
 from src.anti_spoof_predict import AntiSpoofPredict
 from src.generate_patches import CropImage
 from src.utility import parse_model_name
@@ -9,16 +14,15 @@ import onnxruntime
 import torch.nn.functional as F
 warnings.filterwarnings('ignore')
 
-model_1 = 'resources/anti_spoof_models/2.7_80x80_MiniFASNetV2.pth'
-model_2 = 'resources/anti_spoof_models/4_0_0_80x80_MiniFASNetV1SE.pth'
-
+model_1 = 'miniFAS/resources/anti_spoof_models/2.7_80x80_MiniFASNetV2.pth'
+model_2 = 'miniFAS/resources/anti_spoof_models/4_0_0_80x80_MiniFASNetV1SE.pth'
+model_save = 'miniFAS/model_onnx/'
 def to_numpy(tensor):
     return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
 
 def load_fas_onnx(model_path, image):
     torch_model = AntiSpoofPredict(0)
     image_cropper = CropImage()
-   
     image_bbox, conf = torch_model.get_bbox(image)
     if conf < 0.7:
         return "none"
@@ -51,8 +55,10 @@ def load_fas_onnx(model_path, image):
     model_name = model_name.split(".pth")[0]
    
     save_name = model_name +'.onnx'
-    onnx_program.save(save_name)
-    ort_session = onnxruntime.InferenceSession(save_name)
+    result_path = os.path.join(model_save, save_name)
+
+    onnx_program.save(result_path)
+    ort_session = onnxruntime.InferenceSession(result_path)
     onnx_input = {k.name: to_numpy(v) for k,v in zip(ort_session.get_inputs(), onnx_input)}
     onnxruntime_outputs = ort_session.run(None, onnx_input)
     onnxruntime_outputs = torch.Tensor(onnxruntime_outputs)
@@ -83,10 +89,8 @@ def miniFAS_pytorch(image):
         img = image_cropper.crop(**param)[0]
 
         prediction += model_test.predict(img, model)
-    print("prediction: ", prediction)
     label = np.argmax(prediction)
-    value = prediction[0][label]/2
-    print("value: ", value)
+    # value = prediction[0][label]/2
     return "real" if label == 1 else "fake"
 
 def miniFAS_onnx(image):
@@ -97,9 +101,8 @@ def miniFAS_onnx(image):
             return "none"
         else:
             prediction += flag
-    print("prediction: ", prediction)
     label = np.argmax(prediction)
     value = prediction[0][label]/2
-    print("value: ", value)
     return "real" if label == 1 else "fake"
     
+
