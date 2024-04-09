@@ -42,7 +42,7 @@ def camera(frame_fas, result_fas, frame_verify, result_verify):
             break
         if lowlight_enhancer.is_lowlight(frame,threshold):
             frame = lowlight_enhancer.enhance(frame)
-        image_bbox = fas_model1.is_face(frame)
+        image_bbox,_ = detect_face(frame)
 
         if start_fas and image_bbox is not None:
             batch_face.append((image_bbox, frame))
