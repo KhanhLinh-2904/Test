@@ -21,29 +21,20 @@ scale_factor = 12
 fas_model1 = FaceAntiSpoofing(model_1)
 fas_model2 = FaceAntiSpoofing(model_2)
 lowlight_enhancer = LowLightEnhancer(scale_factor=12, model_onnx=model_llie)
-
-# import subprocess
-# subprocess.call(['ffmpeg', '-i', 'input.mp4', '-f', 'mp3', '-ab', '320000', '-vn', '-sn', '-dn', '-ignore_unknown', 'output.mp3'])
-
-
 def camera(video_path):
     frame_fas = []
     # Create a VideoCapture object called cap
     cap = cv2.VideoCapture(video_path)
-    frame_number = 25
-    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number - 1)
+    # frame_number = 25
+    # cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number - 1)
     # This is an infinite loop that will continue to run until the user presses the `q` key
     count_frame = 0
     count_non_face = 0
+    num_frames = 0
     while cap.isOpened():
-        # tic = time.time()
-
-        # Read a frame from the webcam
+       
         ret, frame = cap.read()
-        # frame_root = cv2.flip(frame_root, 1)
-        # frame = frame_root.copy()
-
-        # If the frame was not successfully captured, break out of the loop
+        num_frames += 1
         if ret is False:
             break
         if lowlight_enhancer.is_lowlight(frame,threshold):
@@ -58,7 +49,7 @@ def camera(video_path):
             frame_fas.append(frame)
             count_frame += 1
         
-        if count_frame == 5 or count_non_face > 10:
+        if count_frame == 9:
             break
             
         # Check if the user has pressed the `q` key, if yes then close the program.
@@ -69,9 +60,7 @@ def camera(video_path):
     # Release the VideoCapture object
     cap.release()
 
-    # Close all open windows
-    # cv2.destroyAllWindows()
-    return frame_fas
+    return frame_fas, num_frames
 
 def anti_spoofing(frame_fas):
     while True:
@@ -102,15 +91,18 @@ if __name__ == "__main__":
     fn = 0
     fp = 0
     label = 'REAL'
+    total_frames = 0
+    
     videos = os.listdir(dataset)
     print("len folder: ", len(videos))
     # for video in tqdm(videos):
+    start_time = time.time()
     for video in videos:
         video_path = os.path.join(dataset, video)
         print("video_path: ",video_path)
        
-        frame_fas = camera(video_path)
-
+        frame_fas, num_frames = camera(video_path)
+        total_frames += num_frames
         output = anti_spoofing(frame_fas)
         print('output: ', output)
         print('--------------------------------------------------------------------------------------')
@@ -123,7 +115,7 @@ if __name__ == "__main__":
             fp += 1
         elif output == 'REAL' and label == 'REAL':
             tn += 1  
-        
+    total_time = time.time() - start_time
     
     print('--------------------------------------------------------------------------------------')
     print('fusion matrix')
@@ -131,3 +123,5 @@ if __name__ == "__main__":
     print('tn: ', tn)
     print('fp: ', fp)
     print('fn: ', fn)
+    print('Total time: ', total_time)
+    print('Total frames: ', total_frames)
